@@ -702,54 +702,54 @@ class FeatureList:
 
     def draw_sfs(self, model, scoring=None, strategy='k-fold', cv=10, iters=1, shuffle=False, direction='backward'):
     # Determine the appropriate scoring metric if not provided
-    if scoring is None:
-        if is_regressor(model):
-            scoring = 'neg_root_mean_squared_error'
-        elif is_classifier(model):
-            scoring = 'roc_auc'
+        if scoring is None:
+            if is_regressor(model):
+                scoring = 'neg_root_mean_squared_error'
+            elif is_classifier(model):
+                scoring = 'roc_auc'
+            else:
+                raise ValueError('Model type not recognized.')
+
+        # Prepare data for feature selection
+        X = self.feature_df.to_numpy()
+        y = self.response.to_numpy()
+
+        # Set up cross-validation strategy
+        if strategy == 'k-fold':
+            cv_model = KFold(n_splits=cv, shuffle=shuffle)
+        elif strategy == 'repeated_k-fold':
+            if iters <= 1:
+                raise ValueError('Iters must be greater than 1 for repeated k-fold.')
+            cv_model = RepeatedKFold(n_splits=cv, n_repeats=iters)
         else:
-            raise ValueError('Model type not recognized.')
+            raise ValueError('Strategy must be one of: k-fold or repeated_k-fold.')
 
-    # Prepare data for feature selection
-    X = self.feature_df.to_numpy()
-    y = self.response.to_numpy()
+        # Initialize the Sequential Feature Selector
+        sfs = SequentialFeatureSelector(model, k_features='auto', forward=(direction == 'forward'), scoring=scoring, cv=cv_model, n_jobs=-1)
+        sfs = sfs.fit(X, y)
 
-    # Set up cross-validation strategy
-    if strategy == 'k-fold':
-        cv_model = KFold(n_splits=cv, shuffle=shuffle)
-    elif strategy == 'repeated_k-fold':
-        if iters <= 1:
-            raise ValueError('Iters must be greater than 1 for repeated k-fold.')
-        cv_model = RepeatedKFold(n_splits=cv, n_repeats=iters)
-    else:
-        raise ValueError('Strategy must be one of: k-fold or repeated_k-fold.')
+        # Store information for plotting
+        feature_indices = list(range(len(self.feature_names)))
+        scores_mean = np.array([sfs.subsets_[i]['avg_score'] for i in feature_indices])
+        scores_std = np.array([np.std(sfs.subsets_[i]['cv_scores']) for i in feature_indices])
 
-    # Initialize the Sequential Feature Selector
-    sfs = SequentialFeatureSelector(model, k_features='auto', forward=(direction == 'forward'), scoring=scoring, cv=cv_model, n_jobs=-1)
-    sfs = sfs.fit(X, y)
+        # Adjust metric names for plotting
+        ylabel = scoring.replace('_', ' ').capitalize()
 
-    # Store information for plotting
-    feature_indices = list(range(len(self.feature_names)))
-    scores_mean = np.array([sfs.subsets_[i]['avg_score'] for i in feature_indices])
-    scores_std = np.array([np.std(sfs.subsets_[i]['cv_scores']) for i in feature_indices])
+        # Plot the data
+        fig, ax = plt.subplots()
+        title = f'Sequential {direction.capitalize()} Selection'
+        ax.set_title(title, fontsize=14, fontweight='bold', pad=25)
+        ax.plot(feature_indices, scores_mean, color='cyan')
+        ax.fill_between(feature_indices, scores_mean + scores_std, scores_mean - scores_std, color='cyan', alpha=0.15)
 
-    # Adjust metric names for plotting
-    ylabel = scoring.replace('_', ' ').capitalize()
+        # Find the maximum metric value and corresponding feature set
+        max_idx = np.argmax(scores_mean)
+        max_metric = scores_mean[max_idx]
+        max_std = scores_std[max_idx]
+        best_features_idx = sfs.k_feature_idx_
 
-    # Plot the data
-    fig, ax = plt.subplots()
-    title = f'Sequential {direction.capitalize()} Selection'
-    ax.set_title(title, fontsize=14, fontweight='bold', pad=25)
-    ax.plot(feature_indices, scores_mean, color='cyan')
-    ax.fill_between(feature_indices, scores_mean + scores_std, scores_mean - scores_std, color='cyan', alpha=0.15)
-
-    # Find the maximum metric value and corresponding feature set
-    max_idx = np.argmax(scores_mean)
-    max_metric = scores_mean[max_idx]
-    max_std = scores_std[max_idx]
-    best_features_idx = sfs.k_feature_idx_
-
-    return fig, ax, max_metric, max_std, best_features_idx
+        return fig, ax, max_metric, max_std, best_features_idx
 
 
     def compute_confusion_matrix(self, model, best_features_idx):
