@@ -747,7 +747,7 @@ class FeatureList:
         max_idx = np.argmax(scores_mean)
         max_metric = scores_mean[max_idx]
         max_std = scores_std[max_idx]
-        best_features_idx = sfs.k_feature_idx_[max_idx]
+        best_features_idx = max_idx
 
         return fig, ax, max_metric, max_std, best_features_idx
 
