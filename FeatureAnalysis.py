@@ -725,7 +725,7 @@ class FeatureList:
             raise ValueError('Strategy must be one of: k-fold or repeated_k-fold.')
 
         # Initialize the Sequential Feature Selector
-        sfs = SequentialFeatureSelector(model, k_features='auto', forward=(direction == 'forward'), scoring=scoring, cv=cv_model, n_jobs=-1)
+        sfs = SequentialFeatureSelector(model, k_features='best', forward=(direction == 'forward'), scoring=scoring, cv=cv_model, n_jobs=-1)
         sfs = sfs.fit(X, y)
 
         # Store information for plotting
