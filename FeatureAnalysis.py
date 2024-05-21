@@ -730,8 +730,8 @@ class FeatureList:
 
         # Store information for plotting
         feature_indices = list(range(len(self.feature_names)))
-        scores_mean = np.array([sfs.subsets_[i]['avg_score'] for i in feature_indices])
-        scores_std = np.array([np.std(sfs.subsets_[i]['cv_scores']) for i in feature_indices])
+        scores_mean = np.array([sfs.subsets_[i]['avg_score'] for i in sorted(sfs.subsets_.keys())])
+        scores_std = np.array([np.std(sfs.subsets_[i]['cv_scores']) for i in sorted(sfs.subsets_.keys())])
 
         # Adjust metric names for plotting
         ylabel = scoring.replace('_', ' ').capitalize()
