@@ -728,6 +728,25 @@ class FeatureList:
         sfs = SequentialFeatureSelector(model, k_features='best', forward=(direction == 'forward'), scoring=scoring, cv=cv_model, n_jobs=-1)
         sfs = sfs.fit(X, y)
 
+                # Store information about cv iteration means, standard deviations and the order in which the
+        # features where added or substracted from the model in this array.
+        info = np.empty((len(sfs.subsets_.keys()), 3))
+        info[:, :] = np.nan
+
+        for i, j in enumerate(sorted(sfs.subsets_.keys())):
+            info[i, 0] = np.setdiff1d(list(sfs.subsets_[j]['feature_idx']), info[:, 0])
+            info[i, 1] = sfs.subsets_[j]['cv_scores'].mean()
+            info[i, 2] = sfs.subsets_[j]['cv_scores'].std()
+
+        # If sklearn uses negative version of metric, correct sign and name of metric for plotting.
+        if scoring.startswith('neg_'):
+            info[:, 1] = -info[:, 1]
+            ylabel = ' '.join([word.capitalize() for word in scoring.replace('neg_', '').split('_')])
+        else:
+            ylabel = ' '.join([word.capitalize() for word in scoring.split('_')])
+        
+
+
         # Store information for plotting
         feature_indices = list(range(len(self.feature_names)))
         scores_mean = np.array([sfs.subsets_[i]['avg_score'] for i in sorted(sfs.subsets_.keys())])
@@ -737,11 +756,23 @@ class FeatureList:
         ylabel = scoring.replace('_', ' ').capitalize()
 
         # Plot the data
+                # Plot data.
         fig, ax = plt.subplots()
+
         title = f'Sequential {direction.capitalize()} Selection'
         ax.set_title(title, fontsize=14, fontweight='bold', pad=25)
-        ax.plot(feature_indices, scores_mean, color='cyan')
-        ax.fill_between(feature_indices, scores_mean + scores_std, scores_mean - scores_std, color='cyan', alpha=0.15)
+        ax.set_xticks(np.arange(info.shape[0]))
+        ax.set_xticklabels(self.feature_names[info[:, 0].astype('int32')], rotation=90)
+        ax.set_xlabel('Features', fontsize=12, fontweight='bold', labelpad=15)
+        ax.set_ylabel(ylabel, fontsize=12, fontweight='bold', labelpad=15)
+        ax.plot(np.arange(info.shape[0]), info[:, 1], color='cyan')
+        ax.fill_between(np.arange(info.shape[0]), info[:, 1] + info[:, 2], info[:, 1] - info[:, 2],
+                        color='cyan', alpha=0.15, lw=2)
+        
+        # Color feature names according to the cluster they belong to.
+        for i, x in enumerate(ax.get_xticklabels()):
+            j = np.where(self.cluster_colors.loc[:, 'Features'] == x.get_text())[0]
+            ax.get_xticklabels()[i].set_color(self.cluster_colors.loc[j, 'Colors'].to_numpy()[0])
 
         # Find the maximum metric value and corresponding feature set
         max_idx = np.argmax(scores_mean)
