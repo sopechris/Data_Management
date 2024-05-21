@@ -754,7 +754,7 @@ class FeatureList:
 
     def compute_confusion_matrix(self, model, best_features_idx):
         # Prepare subset of data with selected features
-        X = self.feature_df.iloc[:, best_features_idx].to_numpy()
+        X = self.feature_df.iloc[:, best_features_idx].to_numpy().reshape(-1, 1)
         y = self.response.to_numpy()
 
         # Fit the model and predict
