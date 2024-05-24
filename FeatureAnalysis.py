@@ -762,8 +762,9 @@ class FeatureList:
     max_metric = scores_mean[max_idx]
     max_std = scores_std[max_idx]
     best_features_idx = sfs.subsets_[sorted(sfs.subsets_.keys())[max_idx]]['feature_idx']
+    n_iteration = max_idx + 1
 
-    return fig, ax, max_metric, max_std, best_features_idx
+    return fig, ax, max_metric, max_std, best_features_idx, n_iteration
 
 
 
