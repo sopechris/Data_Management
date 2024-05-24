@@ -700,87 +700,71 @@ class FeatureList:
         print(f'\033[1mSelected best {top} features\033[0m: ' + selected_features)
         print(f'\033[1mRejected worst {len(self.feature_names) - top} features\033[0m: ' + rejected_features)
 
-    def draw_sfs(self, model, scoring=None, strategy='k-fold', cv=10, iters=1, shuffle=False, direction='backward'):
-    # Determine the appropriate scoring metric if not provided
-        if scoring is None:
-            if is_regressor(model):
-                scoring = 'neg_root_mean_squared_error'
-            elif is_classifier(model):
-                scoring = 'roc_auc'
-            else:
-                raise ValueError('Model type not recognized.')
-
-        # Prepare data for feature selection
-        X = self.feature_df.to_numpy()
-        y = self.response.to_numpy()
-
-        # Set up cross-validation strategy
-        if strategy == 'k-fold':
-            cv_model = KFold(n_splits=cv, shuffle=shuffle)
-        elif strategy == 'repeated_k-fold':
-            if iters <= 1:
-                raise ValueError('Iters must be greater than 1 for repeated k-fold.')
-            cv_model = RepeatedKFold(n_splits=cv, n_repeats=iters)
+   def draw_sfs(self, model, scoring=None, strategy='k-fold', cv=10, iters=1, shuffle=False, direction='backward'):
+    if scoring is None:
+        if is_regressor(model):
+            scoring = 'neg_root_mean_squared_error'
+        elif is_classifier(model):
+            scoring = 'roc_auc'
         else:
-            raise ValueError('Strategy must be one of: k-fold or repeated_k-fold.')
+            raise ValueError('Model type not recognized.')
 
-        # Initialize the Sequential Feature Selector
-        sfs = SequentialFeatureSelector(model, k_features='best', forward=(direction == 'forward'), scoring=scoring, cv=cv_model, n_jobs=-1)
-        sfs = sfs.fit(X, y)
+    X = self.feature_df.to_numpy()
+    y = self.response.to_numpy()
 
-                # Store information about cv iteration means, standard deviations and the order in which the
-        # features where added or substracted from the model in this array.
-        info = np.empty((len(sfs.subsets_.keys()), 3))
-        info[:, :] = np.nan
+    if strategy == 'k-fold':
+        cv_model = KFold(n_splits=cv, shuffle=shuffle)
+    elif strategy == 'repeated_k-fold':
+        if iters <= 1:
+            raise ValueError('Iters must be greater than 1 for repeated k-fold.')
+        cv_model = RepeatedKFold(n_splits=cv, n_repeats=iters)
+    else:
+        raise ValueError('Strategy must be one of: k-fold or repeated_k-fold.')
 
-        for i, j in enumerate(sorted(sfs.subsets_.keys())):
-            info[i, 0] = np.setdiff1d(list(sfs.subsets_[j]['feature_idx']), info[:, 0])
-            info[i, 1] = sfs.subsets_[j]['cv_scores'].mean()
-            info[i, 2] = sfs.subsets_[j]['cv_scores'].std()
+    sfs = SequentialFeatureSelector(model, k_features='best', forward=(direction == 'forward'), scoring=scoring, cv=cv_model, n_jobs=-1)
+    sfs = sfs.fit(X, y)
 
-        # If sklearn uses negative version of metric, correct sign and name of metric for plotting.
-        if scoring.startswith('neg_'):
-            info[:, 1] = -info[:, 1]
-            ylabel = ' '.join([word.capitalize() for word in scoring.replace('neg_', '').split('_')])
-        else:
-            ylabel = ' '.join([word.capitalize() for word in scoring.split('_')])
-        
+    info = np.empty((len(sfs.subsets_.keys()), 3))
+    info[:, :] = np.nan
 
+    for i, j in enumerate(sorted(sfs.subsets_.keys())):
+        info[i, 0] = np.setdiff1d(list(sfs.subsets_[j]['feature_idx']), info[:, 0])
+        info[i, 1] = sfs.subsets_[j]['cv_scores'].mean()
+        info[i, 2] = sfs.subsets_[j]['cv_scores'].std()
 
-        # Store information for plotting
-        feature_indices = list(range(len(self.feature_names)))
-        scores_mean = np.array([sfs.subsets_[i]['avg_score'] for i in sorted(sfs.subsets_.keys())])
-        scores_std = np.array([np.std(sfs.subsets_[i]['cv_scores']) for i in sorted(sfs.subsets_.keys())])
+    if scoring.startswith('neg_'):
+        info[:, 1] = -info[:, 1]
+        ylabel = ' '.join([word.capitalize() for word in scoring.replace('neg_', '').split('_')])
+    else:
+        ylabel = ' '.join([word.capitalize() for word in scoring.split('_')])
 
-        # Adjust metric names for plotting
-        ylabel = scoring.replace('_', ' ').capitalize()
+    feature_indices = list(range(len(self.feature_names)))
+    scores_mean = np.array([sfs.subsets_[i]['avg_score'] for i in sorted(sfs.subsets_.keys())])
+    scores_std = np.array([np.std(sfs.subsets_[i]['cv_scores']) for i in sorted(sfs.subsets_.keys())])
 
-        # Plot the data
-                # Plot data.
-        fig, ax = plt.subplots()
+    ylabel = scoring.replace('_', ' ').capitalize()
 
-        title = f'Sequential {direction.capitalize()} Selection'
-        ax.set_title(title, fontsize=14, fontweight='bold', pad=25)
-        ax.set_xticks(np.arange(info.shape[0]))
-        ax.set_xticklabels(self.feature_names[info[:, 0].astype('int32')], rotation=90)
-        ax.set_xlabel('Features', fontsize=12, fontweight='bold', labelpad=15)
-        ax.set_ylabel(ylabel, fontsize=12, fontweight='bold', labelpad=15)
-        ax.plot(np.arange(info.shape[0]), info[:, 1], color='cyan')
-        ax.fill_between(np.arange(info.shape[0]), info[:, 1] + info[:, 2], info[:, 1] - info[:, 2],
-                        color='cyan', alpha=0.15, lw=2)
-        
-        # Color feature names according to the cluster they belong to.
-        for i, x in enumerate(ax.get_xticklabels()):
-            j = np.where(self.cluster_colors.loc[:, 'Features'] == x.get_text())[0]
-            ax.get_xticklabels()[i].set_color(self.cluster_colors.loc[j, 'Colors'].to_numpy()[0])
+    fig, ax = plt.subplots()
+    title = f'Sequential {direction.capitalize()} Selection'
+    ax.set_title(title, fontsize=14, fontweight='bold', pad=25)
+    ax.set_xticks(np.arange(info.shape[0]))
+    ax.set_xticklabels(self.feature_names[info[:, 0].astype('int32')], rotation=90)
+    ax.set_xlabel('Features', fontsize=12, fontweight='bold', labelpad=15)
+    ax.set_ylabel(ylabel, fontsize=12, fontweight='bold', labelpad=15)
+    ax.plot(np.arange(info.shape[0]), info[:, 1], color='cyan')
+    ax.fill_between(np.arange(info.shape[0]), info[:, 1] + info[:, 2], info[:, 1] - info[:, 2], color='cyan', alpha=0.15, lw=2)
+    
+    for i, x in enumerate(ax.get_xticklabels()):
+        j = np.where(self.cluster_colors.loc[:, 'Features'] == x.get_text())[0]
+        ax.get_xticklabels()[i].set_color(self.cluster_colors.loc[j, 'Colors'].to_numpy()[0])
 
-        # Find the maximum metric value and corresponding feature set
-        max_idx = np.argmax(scores_mean)
-        max_metric = scores_mean[max_idx]
-        max_std = scores_std[max_idx]
-        best_features_idx = max_idx
+    max_idx = np.argmax(scores_mean)
+    max_metric = scores_mean[max_idx]
+    max_std = scores_std[max_idx]
+    best_features_idx = sfs.subsets_[sorted(sfs.subsets_.keys())[max_idx]]['feature_idx']
 
-        return fig, ax, max_metric, max_std, best_features_idx
+    return fig, ax, max_metric, max_std, best_features_idx
+
 
 
     def compute_confusion_matrix(self, model, best_features_idx):
