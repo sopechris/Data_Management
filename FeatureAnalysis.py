@@ -22,6 +22,7 @@ from sklearn.decomposition import PCA
 from mlxtend.feature_selection import SequentialFeatureSelector
 import Utils
 from sklearn.pipeline import Pipeline
+from imblearn.over_sampling import BorderlineSMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
 
 
