@@ -12,7 +12,7 @@ import seaborn as sns
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
 from sklearn.base import clone, is_regressor, is_classifier
-from sklearn.model_selection import KFold, RepeatedKFold
+from sklearn.model_selection import StratifiedShuffleSplit, KFold, RepeatedKFold
 from sklearn.metrics import confusion_matrix
 from sklearn.feature_selection import f_regression, mutual_info_regression
 from sklearn.feature_selection import f_classif, chi2, mutual_info_classif
@@ -21,6 +21,8 @@ from sklearn.inspection import permutation_importance
 from sklearn.decomposition import PCA
 from mlxtend.feature_selection import SequentialFeatureSelector
 import Utils
+from sklearn.pipeline import Pipeline
+from imblearn.pipeline import Pipeline as ImbPipeline
 
 
 cpu_num = Utils.cpu_num
