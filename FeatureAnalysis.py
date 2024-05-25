@@ -701,7 +701,7 @@ class FeatureList:
         print(f'Features analyzed with {direction} sequential feature selection.')
         print(f'\033[1mSelected best {top} features\033[0m: ' + selected_features)
         print(f'\033[1mRejected worst {len(self.feature_names) - top} features\033[0m: ' + rejected_features)
-
+    RND_SEED=42
     def draw_sfs(self, model, scoring=None, strategy='k-fold', cv=10, iters=1, shuffle=True, direction='backward'):
     # Determine the appropriate scoring metric if not provided
         if scoring is None:
@@ -728,7 +728,7 @@ class FeatureList:
         else:
             raise ValueError('Strategy must be one of: k-fold or repeated_k-fold.')
        
-        RND_SEED=42
+        
          
         smote = BorderlineSMOTE(random_state=RND_SEED)
         pipeline = make_pipeline(smote, model)
