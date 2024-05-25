@@ -732,7 +732,7 @@ class FeatureList:
         
          
         smote = BorderlineSMOTE(random_state=42)
-        pipeline = make_pipeline(smote, model)
+        pipeline = ImbPipeline(steps=[('smote', smote), ('model', model)])
 
         # Initialize the Sequential Feature Selector
         sfs = SequentialFeatureSelector(pipeline, k_features='best', forward=(direction == 'forward'), scoring=scoring, cv=cv_model, n_jobs=-1)
