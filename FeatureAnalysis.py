@@ -723,6 +723,7 @@ class FeatureList:
             for train_index, test_index in cv_model.split(X, y):
                 X_train, X_test = X[train_index], X[test_index]  # Get training and testing data
                 y_train, y_test = y[train_index], y[test_index]
+                y_train_series = pd.Series(y_train)
         elif strategy == 'k-fold':
             cv_model = KFold(n_splits=cv, shuffle=shuffle, random_state=42)
         elif strategy == 'repeated_k-fold':
@@ -732,7 +733,7 @@ class FeatureList:
         else:
             raise ValueError('Strategy must be one of: k-fold or repeated_k-fold.')
         
-        smallest_class_count = y_train.value_counts().min()
+        smallest_class_count = y_train_series.value_counts().min()
         smote_neighbors = max(smallest_class_count - 1, 1)
         
         smote = BorderlineSMOTE(random_state=42, n_neighbors=smote_neighbors)
