@@ -808,20 +808,18 @@ class FeatureList:
         if len(X.shape) == 1:
             X = X.reshape(-1, 1)
     
-        # Initialize stratified K-fold cross-validation
-        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        # Initialize stratified shuffle split
+        sss = StratifiedShuffleSplit(n_splits=10, test_size=0.3, random_state=42)
         smote = BorderlineSMOTE(random_state=42)
         
         # Lists to store the confusion matrix and classification report for each fold
         cms = []
         reports = []
     
-        # Perform stratified K-fold cross-validation
-        for train_index, _ in skf.split(X, y):
-            X_fold, y_fold = X[train_index], y[train_index]
-    
-            # Split fold data into 70% train and 30% test
-            X_train, X_test, y_train, y_test = train_test_split(X_fold, y_fold, test_size=0.3, stratify=y_fold, random_state=42)
+        # Perform stratified shuffle split
+        for train_index, test_index in sss.split(X, y):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
     
             # Apply Borderline-SMOTE to the training data
             X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
