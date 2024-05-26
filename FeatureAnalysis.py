@@ -808,9 +808,6 @@ class FeatureList:
         if len(X.shape) == 1:
             X = X.reshape(-1, 1)
     
-        # Initialize stratified shuffle split
-        sss = StratifiedShuffleSplit(n_splits=10, test_size=0.3, random_state=42)
-        smote = BorderlineSMOTE(random_state=42)
         
         # Lists to store the confusion matrix and classification report for each fold
         cms = []
@@ -820,7 +817,11 @@ class FeatureList:
         for train_index, test_index in sss.split(X, y):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
-    
+            #For smote, not to let k neghbors > underclassed event counts (error)
+            smallest_class_count = y_train_series.value_counts().min()
+            smote_neighbors = max(smallest_class_count - 1, 1)
+            sss = StratifiedShuffleSplit(n_splits=10, test_size=0.3, random_state=42)
+            smote = BorderlineSMOTE(random_state=42, k_neighbors=smote_neighbors)
             # Apply Borderline-SMOTE to the training data
             X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
     
