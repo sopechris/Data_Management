@@ -818,6 +818,7 @@ class FeatureList:
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             #For smote, not to let k neghbors > underclassed event counts (error)
+            y_train_series = pd.Series(y_train)
             smallest_class_count = y_train_series.value_counts().min()
             smote_neighbors = max(smallest_class_count - 1, 1)
             
