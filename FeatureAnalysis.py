@@ -736,7 +736,7 @@ class FeatureList:
         smallest_class_count = y_train_series.value_counts().min()
         smote_neighbors = max(smallest_class_count - 1, 1)
         
-        smote = BorderlineSMOTE(random_state=42, n_neighbors=smote_neighbors)
+        smote = BorderlineSMOTE(random_state=42, k_neighbors=smote_neighbors)
         pipeline = ImbPipeline(steps=[('smote', smote), ('model', model)])
 
         # Initialize the Sequential Feature Selector
