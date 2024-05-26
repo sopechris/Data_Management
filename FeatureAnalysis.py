@@ -720,7 +720,7 @@ class FeatureList:
         # Set up cross-validation strategy
         if strategy == 'holdout':
             cv_model = StratifiedShuffleSplit(n_splits=cv, test_size=0.3, random_state=42)
-            for train_index, test_index in sss.split(X, y):
+            for train_index, test_index in cv_model.split(X, y):
                 X_train, X_test = X[train_index], X[test_index]  # Get training and testing data
                 y_train, y_test = y[train_index], y[test_index]
         elif strategy == 'k-fold':
