@@ -720,6 +720,9 @@ class FeatureList:
         # Set up cross-validation strategy
         if strategy == 'holdout':
             cv_model = StratifiedShuffleSplit(n_splits=cv, test_size=0.3, random_state=42)
+            for train_index, test_index in sss.split(X, y):
+                X_train, X_test = X[train_index], X[test_index]  # Get training and testing data
+                y_train, y_test = y[train_index], y[test_index]
         elif strategy == 'k-fold':
             cv_model = KFold(n_splits=cv, shuffle=shuffle, random_state=42)
         elif strategy == 'repeated_k-fold':
@@ -728,10 +731,11 @@ class FeatureList:
             cv_model = RepeatedKFold(n_splits=cv, n_repeats=iters, random_state=42)
         else:
             raise ValueError('Strategy must be one of: k-fold or repeated_k-fold.')
-       
         
-         
-        smote = BorderlineSMOTE(random_state=42)
+        smallest_class_count = y_train.value_counts().min()
+        smote_neighbors = max(smallest_class_count - 1, 1)
+        
+        smote = BorderlineSMOTE(random_state=42, n_neighbors=smote_neighbors)
         pipeline = ImbPipeline(steps=[('smote', smote), ('model', model)])
 
         # Initialize the Sequential Feature Selector
