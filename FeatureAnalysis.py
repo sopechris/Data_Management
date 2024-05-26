@@ -12,7 +12,7 @@ import seaborn as sns
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
 from sklearn.base import clone, is_regressor, is_classifier
-from sklearn.model_selection import StratifiedShuffleSplit, KFold, RepeatedKFold
+from sklearn.model_selection import StratifiedShuffleSplit, KFold, RepeatedKFold, train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.feature_selection import f_regression, mutual_info_regression
 from sklearn.feature_selection import f_classif, chi2, mutual_info_classif
@@ -804,19 +804,50 @@ class FeatureList:
         best_features = self.feature_df.iloc[:, list(best_features_idx)]
         X = best_features.to_numpy()
         y = self.response.to_numpy()
-
+    
         if len(X.shape) == 1:
             X = X.reshape(-1, 1)
-        # Fit the model and predict
-        model.fit(X, y)
-        y_pred = model.predict(X)
+    
+        # Initialize stratified K-fold cross-validation
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        smote = BorderlineSMOTE(random_state=42)
         
-        # Confusion matrix and classification report
-        
-        cm = confusion_matrix(y, y_pred)
-        cr = classification_report(y, y_pred)
+        # Lists to store the confusion matrix and classification report for each fold
+        cms = []
+        reports = []
+    
+        # Perform stratified K-fold cross-validation
+        for train_index, _ in skf.split(X, y):
+            X_fold, y_fold = X[train_index], y[train_index]
+    
+            # Split fold data into 70% train and 30% test
+            X_train, X_test, y_train, y_test = train_test_split(X_fold, y_fold, test_size=0.3, stratify=y_fold, random_state=42)
+    
+            # Apply Borderline-SMOTE to the training data
+            X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
+    
+            # Fit the model and predict
+            model.fit(X_train_res, y_train_res)
+            y_pred = model.predict(X_test)
             
-        return cm, cr
+            # Compute confusion matrix and classification report for the current fold
+            cm = confusion_matrix(y_test, y_pred)
+            cr = classification_report(y_test, y_pred, output_dict=True)
+            
+            cms.append(cm)
+            reports.append(cr)
+    
+        # Aggregate results
+        average_cm = np.mean(cms, axis=0)
+        # Average classification report
+        average_cr = {
+            "precision": np.mean([report['weighted avg']['precision'] for report in reports]),
+            "recall": np.mean([report['weighted avg']['recall'] for report in reports]),
+            "f1-score": np.mean([report['weighted avg']['f1-score'] for report in reports]),
+            "support": np.mean([report['weighted avg']['support'] for report in reports]),
+        }
+    
+        return average_cm, average_cr
         
 
         
