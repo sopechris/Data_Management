@@ -762,16 +762,16 @@ class FeatureList:
         
 
 
-        # Store information for plotting
+        
         feature_indices = list(range(len(self.feature_names)))
         scores_mean = np.array([sfs.subsets_[i]['avg_score'] for i in sorted(sfs.subsets_.keys())])
         scores_std = np.array([np.std(sfs.subsets_[i]['cv_scores']) for i in sorted(sfs.subsets_.keys())])
 
-        # Adjust metric names for plotting
+        
         ylabel = scoring.replace('_', ' ').capitalize()
 
-        # Plot the data
-                # Plot data.
+        
+                
         fig, ax = plt.subplots()
 
         title = f'Sequential {direction.capitalize()} Selection'
@@ -784,7 +784,7 @@ class FeatureList:
         ax.fill_between(np.arange(info.shape[0]), info[:, 1] + info[:, 2], info[:, 1] - info[:, 2],
                         color='cyan', alpha=0.15, lw=2)
         
-        # Color feature names according to the cluster they belong to.
+        # Feature names by cluster
         for i, x in enumerate(ax.get_xticklabels()):
             j = np.where(self.cluster_colors.loc[:, 'Features'] == x.get_text())[0]
             ax.get_xticklabels()[i].set_color(self.cluster_colors.loc[j, 'Colors'].to_numpy()[0])
@@ -800,7 +800,7 @@ class FeatureList:
 
 
     def compute_confusion_matrix(self, model, best_features_idx):
-        # Prepare subset of data with selected features
+        # Preparedata with selected features
         best_features = self.feature_df.iloc[:, list(best_features_idx)]
         X = best_features.to_numpy()
         y = self.response.to_numpy()
@@ -811,14 +811,13 @@ class FeatureList:
         model.fit(X, y)
         y_pred = model.predict(X)
         
-        # Compute the confusion matrix if model is a classifier
-        if is_classifier(model):
-            cm = confusion_matrix(y, y_pred)
-            cr = classification_report(y, y_pred)
+        # Confusion matrix and classification report
+        
+        cm = confusion_matrix(y, y_pred)
+        cr = classification_report(y, y_pred)
             
-            return cm, cr
-        else:
-            raise ValueError('Confusion matrix can only be computed for classification models.')
+        return cm, cr
+        
 
         
 # def PartialDependence
