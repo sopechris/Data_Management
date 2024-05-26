@@ -814,7 +814,9 @@ class FeatureList:
         # Compute the confusion matrix if model is a classifier
         if is_classifier(model):
             cm = confusion_matrix(y, y_pred)
-            return cm
+            cr = classification_report(y, y_pred)
+            
+            return cm, cr
         else:
             raise ValueError('Confusion matrix can only be computed for classification models.')
 
