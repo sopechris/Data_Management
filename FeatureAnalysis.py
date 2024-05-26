@@ -13,7 +13,7 @@ from scipy.cluster import hierarchy
 from scipy.spatial import distance
 from sklearn.base import clone, is_regressor, is_classifier
 from sklearn.model_selection import StratifiedShuffleSplit, KFold, RepeatedKFold
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.feature_selection import f_regression, mutual_info_regression
 from sklearn.feature_selection import f_classif, chi2, mutual_info_classif
 from sklearn.feature_selection import SequentialFeatureSelector
