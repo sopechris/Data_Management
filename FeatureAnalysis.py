@@ -800,7 +800,7 @@ class FeatureList:
 
 
     def compute_confusion_matrix(self, model, best_features_idx):
-        # Preparedata with selected features
+        # Prepare data with selected features
         best_features = self.feature_df.iloc[:, list(best_features_idx)]
         X = best_features.to_numpy()
         y = self.response.to_numpy()
