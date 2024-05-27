@@ -847,16 +847,26 @@ class FeatureList:
         average_cm = np.mean(cms, axis=0)
         average_cr = {}
         keys = reports[0].keys()
-        # Calculate mean for each key
+      # Calculate mean for each key
         for key in keys:
-            average_cr[key] = {
-                "precision": np.mean([report[key]['precision'] for report in reports]),
-                "recall": np.mean([report[key]['recall'] for report in reports]),
-                "f1-score": np.mean([report[key]['f1-score'] for report in reports]),
-                "support": np.mean([report[key]['support'] for report in reports]),
-            }
-
+            precision_values = []
+            recall_values = []
+            f1_score_values = []
+            support_values = []
         
+            for report in reports:
+                if key in report:
+                    precision_values.append(report[key].get('precision', 0.0))
+                    recall_values.append(report[key].get('recall', 0.0))
+                    f1_score_values.append(report[key].get('f1-score', 0.0))
+                    support_values.append(report[key].get('support', 0.0))
+        
+            average_cr[key] = {
+                "precision": np.mean(precision_values),
+                "recall": np.mean(recall_values),
+                "f1-score": np.mean(f1_score_values),
+                "support": np.mean(support_values),
+            }
         return average_cm, average_cr
         
 
