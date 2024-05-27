@@ -811,10 +811,10 @@ class FeatureList:
         # Initialize stratified shuffle split
         sss = StratifiedShuffleSplit(n_splits=10, test_size=0.3, random_state=42)
         
-        # Lists to store the confusion matrix, classification report, and MCC for each fold
+        # Lists to store the confusion matrix, classification report for each fold
         cms = []
         reports = []
-        mccs = []
+        
     
         # Perform stratified shuffle split
         for train_index, test_index in sss.split(X, y):
@@ -846,14 +846,15 @@ class FeatureList:
         # Aggregate confusion matrices
         average_cm = np.mean(cms, axis=0)
         
-    
-        # Average classification report
-        average_cr = {
-            "precision": np.mean([report['weighted avg']['precision'] for report in reports]),
-            "recall": np.mean([report['weighted avg']['recall'] for report in reports]),
-            "f1-score": np.mean([report['weighted avg']['f1-score'] for report in reports]),
-            "support": np.mean([report['weighted avg']['support'] for report in reports]),
-        }
+        keys = reports[0].keys()
+        # Calculate mean for each key
+        for key in keys:
+            average_cr[key] = {
+                "precision": np.mean([report[key]['precision'] for report in reports]),
+                "recall": np.mean([report[key]['recall'] for report in reports]),
+                "f1-score": np.mean([report[key]['f1-score'] for report in reports]),
+                "support": np.mean([report[key]['support'] for report in reports]),
+            }
 
         
         return average_cm, average_cr
