@@ -839,13 +839,12 @@ class FeatureList:
     
         # Aggregate results
         average_cm = np.mean(cms, axis=0)
-        # Average classification report
-        average_cr = {
-            "precision": np.mean([report['weighted avg']['precision'] for report in reports]),
-            "recall": np.mean([report['weighted avg']['recall'] for report in reports]),
-            "f1-score": np.mean([report['weighted avg']['f1-score'] for report in reports]),
-            "support": np.mean([report['weighted avg']['support'] for report in reports]),
-        }
+        avg_report = {}
+        for key in reports[0].keys():
+            if key not in avg_report:
+                avg_report[key] = {}
+        for metric in reports[0][key].keys():
+                avg_report[key][metric] = np.mean([report[key][metric] for report in reports if key in report])
     
         return average_cm, average_cr
         
