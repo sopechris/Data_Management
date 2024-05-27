@@ -857,7 +857,7 @@ class FeatureList:
             average_cr[label] = {}
             metrics = reports[0][label].keys()
             for metric in metrics:
-                average_cr[label][metric] = np.mean([report[label][metric] for report in reports])
+                average_cr[label][metric] = np.mean([report[label][metric] for report in reports if isinstance(report, dict) and label in report])
         
 
         
