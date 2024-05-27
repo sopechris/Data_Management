@@ -846,19 +846,14 @@ class FeatureList:
         # Aggregate confusion matrices
         average_cm = np.mean(cms, axis=0)
         
-        # Initialize an empty dictionary for average classification report
-        average_cr = {}
     
-        # Get all unique labels
-        labels = list(reports[0].keys())
-        
-        # Calculate the mean for each label and metric
-        for label in labels:
-            average_cr[label] = {}
-            metrics = reports[0][label].keys()
-            for metric in metrics:
-                average_cr[label][metric] = np.mean([report[label][metric] for report in reports if isinstance(report, dict) and label in report])
-        
+        # Average classification report
+        average_cr = {
+            "precision": np.mean([report['weighted avg']['precision'] for report in reports]),
+            "recall": np.mean([report['weighted avg']['recall'] for report in reports]),
+            "f1-score": np.mean([report['weighted avg']['f1-score'] for report in reports]),
+            "support": np.mean([report['weighted avg']['support'] for report in reports]),
+        }
 
         
         return average_cm, average_cr
