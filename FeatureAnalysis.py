@@ -808,21 +808,25 @@ class FeatureList:
         if len(X.shape) == 1:
             X = X.reshape(-1, 1)
     
+        # Initialize stratified shuffle split
+        sss = StratifiedShuffleSplit(n_splits=10, test_size=0.3, random_state=42)
         
-        # Lists to store the confusion matrix and classification report for each fold
+        # Lists to store the confusion matrix, classification report, and MCC for each fold
         cms = []
         reports = []
-        sss = StratifiedShuffleSplit(n_splits=10, test_size=0.3, random_state=42)
+        mccs = []
+    
         # Perform stratified shuffle split
         for train_index, test_index in sss.split(X, y):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
-            #For smote, not to let k neghbors > underclassed event counts (error)
+    
+            # For SMOTE, ensure k_neighbors <= smallest class count - 1
             y_train_series = pd.Series(y_train)
             smallest_class_count = y_train_series.value_counts().min()
             smote_neighbors = max(smallest_class_count - 1, 1)
-            
             smote = BorderlineSMOTE(random_state=42, k_neighbors=smote_neighbors)
+    
             # Apply Borderline-SMOTE to the training data
             X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
     
@@ -833,12 +837,31 @@ class FeatureList:
             # Compute confusion matrix and classification report for the current fold
             cm = confusion_matrix(y_test, y_pred)
             cr = classification_report(y_test, y_pred, output_dict=True)
+
             
             cms.append(cm)
             reports.append(cr)
-            average_cm = np.mean(cms, axis=0)
+
     
-        return average_cm, reports
+        # Aggregate confusion matrices
+        average_cm = np.mean(cms, axis=0)
+        
+        # Initialize an empty dictionary for average classification report
+        average_cr = {}
+    
+        # Get all unique labels
+        labels = list(reports[0].keys())
+        
+        # Calculate the mean for each label and metric
+        for label in labels:
+            average_cr[label] = {}
+            metrics = reports[0][label].keys()
+            for metric in metrics:
+                average_cr[label][metric] = np.mean([report[label][metric] for report in reports])
+        
+
+        
+        return average_cm, average_cr
         
 
         
