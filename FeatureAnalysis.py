@@ -810,11 +810,10 @@ class FeatureList:
     
         # Initialize stratified shuffle split
         sss = StratifiedShuffleSplit(n_splits=10, test_size=0.3, random_state=42)
-        
+    
         # Lists to store the confusion matrix, classification report for each fold
         cms = []
         reports = []
-        
     
         # Perform stratified shuffle split
         for train_index, test_index in sss.split(X, y):
@@ -837,37 +836,33 @@ class FeatureList:
             # Compute confusion matrix and classification report for the current fold
             cm = confusion_matrix(y_test, y_pred)
             cr = classification_report(y_test, y_pred, output_dict=True)
-
-            
+    
             cms.append(cm)
             reports.append(cr)
-
     
         # Aggregate confusion matrices
         average_cm = np.mean(cms, axis=0)
         average_cr = {}
         keys = reports[0].keys()
-      # Calculate mean for each key
+        # Calculate mean for each key
         for key in keys:
-            precision_values = []
-            recall_values = []
-            f1_score_values = []
-            support_values = []
-        
-            for report in reports:
-                if key in report:
-                    precision_values.append(report[key].get('precision', 0.0))
-                    recall_values.append(report[key].get('recall', 0.0))
-                    f1_score_values.append(report[key].get('f1-score', 0.0))
-                    support_values.append(report[key].get('support', 0.0))
-        
-            average_cr[key] = {
-                "precision": np.mean(precision_values),
-                "recall": np.mean(recall_values),
-                "f1-score": np.mean(f1_score_values),
-                "support": np.mean(support_values),
-            }
+            if isinstance(reports[0][key], dict):  # Check if the item is a dictionary
+                precision_values = [report[key]['precision'] for report in reports if key in report]
+                recall_values = [report[key]['recall'] for report in reports if key in report]
+                f1_score_values = [report[key]['f1-score'] for report in reports if key in report]
+                support_values = [report[key]['support'] for report in reports if key in report]
+    
+                average_cr[key] = {
+                    "precision": np.mean(precision_values),
+                    "recall": np.mean(recall_values),
+                    "f1-score": np.mean(f1_score_values),
+                    "support": np.mean(support_values),
+                }
+            else:  # Handle cases like 'accuracy' which are directly a float
+                average_cr[key] = np.mean([report[key] for report in reports if key in report])
+    
         return average_cm, average_cr
+
         
 
         
