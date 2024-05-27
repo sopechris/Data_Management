@@ -836,9 +836,9 @@ class FeatureList:
             
             cms.append(cm)
             reports.append(cr)
+            average_cm = np.mean(cms, axis=0)
     
-    
-        return average_cm, cr
+        return average_cm, reports
         
 
         
