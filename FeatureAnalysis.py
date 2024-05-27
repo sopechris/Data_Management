@@ -846,7 +846,7 @@ class FeatureList:
         for metric in reports[0][key].keys():
                 avg_report[key][metric] = np.mean([report[key][metric] for report in reports if key in report])
     
-        return average_cm, average_report
+        return average_cm, avg_report
         
 
         
