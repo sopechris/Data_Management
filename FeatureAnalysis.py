@@ -845,7 +845,7 @@ class FeatureList:
     
         # Aggregate confusion matrices
         average_cm = np.mean(cms, axis=0)
-        
+        average_cr = {}
         keys = reports[0].keys()
         # Calculate mean for each key
         for key in keys:
