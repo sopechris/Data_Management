@@ -837,16 +837,8 @@ class FeatureList:
             cms.append(cm)
             reports.append(cr)
     
-        # Aggregate results
-        average_cm = np.mean(cms, axis=0)
-        avg_report = {}
-        for key in reports[0].keys():
-            if key not in avg_report:
-                avg_report[key] = {}
-        for metric in reports[0][key].keys():
-                avg_report[key][metric] = np.mean([report[key][metric] for report in reports if key in report])
     
-        return average_cm, avg_report
+        return average_cm, cr
         
 
         
